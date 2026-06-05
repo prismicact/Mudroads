@@ -49,7 +49,6 @@
         #lives-ui-container { width: 760px; margin-top: 10px; display: flex; gap: 3px; z-index: 100; display: none; }
         .life-heart { width: 36px; height: 36px; image-rendering: pixelated; }
 
-        /* Central Game Over / Countdown Overlays */
         #try-again-img, #countdown-img {
             position: absolute;
             top: 50%; left: 50%;
@@ -60,7 +59,6 @@
             z-index: 2000;
         }
 
-        /* --- START MENU STYLES --- */
         #start-menu {
             position: absolute;
             top: 0; left: 0;
@@ -82,7 +80,6 @@
             letter-spacing: 2px;
         }
 
-        /* Div-based button for robust TV Remote engine navigation */
         #start-button {
             font-family: 'MyPixelFont', sans-serif;
             font-size: 20px;
@@ -110,7 +107,6 @@
         #leaderboard-title { font-size: 16px; color: #ffff00; margin-bottom: 15px; border-bottom: 2px solid white; padding-bottom: 5px; }
         .leaderboard-entry { font-size: 12px; margin-bottom: 10px; text-transform: uppercase; }
 
-        /* --- TV ARCADE INPUT OVERLAY --- */
         #arcade-input-overlay {
             position: absolute;
             top: 0; left: 0;
@@ -195,7 +191,6 @@
             const startButton = document.getElementById('start-button');
             const leaderboardEntries = document.getElementById('leaderboard-entries');
             
-            // Arcade Input Variables
             const arcadeOverlay = document.getElementById('arcade-input-overlay');
             const arcadeHeadline = document.getElementById('arcade-headline');
             const slots = [document.getElementById('slot-0'), document.getElementById('slot-1'), document.getElementById('slot-2')];
@@ -212,7 +207,6 @@
             let gameStarted = false;
             let runCountdownSequence = true; 
 
-            // --- AUDIO SETUP ---
             const musicMenu = new Audio('assets/music/Menu.wav');
             musicMenu.loop = true;
             
@@ -223,7 +217,6 @@
             const sfxRsg = new Audio('assets/sfx/rsg.mp3');
             const sfxTa = new Audio('assets/sfx/ta.mp3');
 
-            // Play menu music automatically on first TV interaction event
             window.addEventListener('keydown', () => {
                 if(!gameStarted && musicMenu.paused) {
                     musicMenu.play().catch(e => console.log("Menu music initiated"));
@@ -236,7 +229,6 @@
                 }
             });
 
-            // --- LEADERBOARD SYSTEM ---
             function loadLeaderboard() {
                 let data = JSON.parse(localStorage.getItem('mudroads_scores')) || [];
                 leaderboardEntries.innerHTML = '';
@@ -298,7 +290,6 @@
 			
             loadLeaderboard();
 
-            // --- ENGINE START SEQUENCE ---
             function startGameSequence() {
                 musicMenu.pause();
                 startButton.classList.remove('tv-focused');
@@ -309,16 +300,13 @@
                 
                 sfxRsg.play().catch(e => console.log("SFX Blocked"));
 
-                // 0s: READY
                 countdownImg.style.display = 'block';
                 countdownImg.src = 'assets/misc/Ready.png';
                 
-                // 1s: SET
                 setTimeout(() => {
                     countdownImg.src = 'assets/misc/Set.png';
                 }, 1000);
 
-                // 2s: GO (Engages instantly)
                 setTimeout(() => {
                     countdownImg.src = 'assets/misc/Go.png';
                     
@@ -342,7 +330,6 @@
                 requestAnimationFrame(updateGame);
             }
 
-            // --- CONFIGURABLE SPAWN SETTINGS ---
             const START_SPAWN_THRESHOLD = 12; 
             const MAX_SPAWN_THRESHOLD = 7;     
             const SPAWN_RAMP_SPEED = 10;       
@@ -362,20 +349,16 @@
                 if (playerLives >= 0 && playerLives < hearts.length) hearts[playerLives].style.visibility = 'hidden';
             }
 
-            // --- GLOBAL TV REMOTE KEY INPUT HANDLER ---
             window.addEventListener('keydown', (event) => {
                 const keyCode = event.keyCode || event.which;
 
-                // 1. START MENU STATE
                 if (!gameStarted) {
-                    // VIDAA OK Button (Enter / KeyCode 13)
                     if (event.key === 'Enter' || keyCode === 13) {
                         startGameSequence();
                     }
                     return;
                 }
 
-                // 2. LEADERBOARD INITIALS SELECTION OVERLAY ACTIVE
                 if (arcadeInputActive) {
                     if (event.key === 'ArrowUp' || keyCode === 38) {
                         initialsArray[activeSlotIndex]++;
@@ -395,14 +378,12 @@
                         if (activeSlotIndex < 2) activeSlotIndex++;
                         updateSlotVisuals();
                     }
-                    // OK Button saves the initials profile
                     else if (event.key === 'Enter' || keyCode === 13) {
                         if (saveCallback) saveCallback();
                     }
                     return; 
                 }
 
-                // 3. RUNTIME ACTIVE GAMEPLAY DRIVING MECHANICS
                 if (isGameOver || runCountdownSequence) return;
 
                 if (event.key === 'ArrowLeft' || keyCode === 37) { 
