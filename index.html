@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mudroads</title>
-    <link rel="icon" type="image/png" href="assets/misc/icon.png">
+    <link rel="icon" type="image/png" href="assets/misc/icon.png?v=2">
     <style>
         @font-face {
             font-family: 'MyPixelFont';
@@ -27,6 +27,17 @@
             width: 100vw; height: 100vh;
             background-color: #000000;
             display: block; font-family: sans-serif;
+        }
+
+        #vidaa-dpad-trap {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            border: none;
+            background: transparent;
         }
 
         #screen-size-debug {
@@ -184,6 +195,8 @@
     </style>
 </head>
 <body>
+
+    <input id="vidaa-dpad-trap" type="text" readonly tabindex="0">
 
     <div id="screen-size-debug">Size: 0 x 0</div>
 
