@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mudroads</title>
-    <meta charset="UTF-8">
-    <title>Mudroads</title>
     <link rel="icon" type="image/png" href="assets/misc/icon.png">
     <style>
         @font-face {
@@ -13,12 +11,16 @@
             src: url('fonts/PressStart2P-Regular.ttf') format('truetype');
         }
 
-        * { 
+        html, body, * { 
             box-sizing: border-box; 
             margin: 0; 
             padding: 0; 
             overflow: hidden; 
             cursor: none !important; 
+            user-select: none; 
+            -webkit-user-select: none;
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
