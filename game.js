@@ -13,6 +13,7 @@ window.addEventListener('load', function() {
     var leaderboardContainer = document.getElementById('leaderboard-container');
     var leaderboardEntries = document.getElementById('leaderboard-entries');
     var screenSizeDebug = document.getElementById('screen-size-debug');
+    var keyClickDebug = document.getElementById('key-click-debug');
     
     var arcadeOverlay = document.getElementById('arcade-input-overlay');
     var arcadeHeadline = document.getElementById('arcade-headline');
@@ -21,9 +22,6 @@ window.addEventListener('load', function() {
     var initialsArray = [65, 65, 65]; 
     var arcadeInputActive = false;
     var saveCallback = null;
-
-    var menuItems = [];
-    var currentMenuIndex = 0;
 
     var score = 0;
     var currentLaneIndex = 1;
@@ -44,20 +42,10 @@ window.addEventListener('load', function() {
     var sfxRsg = new Audio('assets/sfx/rsg.mp3');
     var sfxTa = new Audio('assets/sfx/ta.mp3');
 
-    function initMenuNavigation() {
-        menuItems = Array.prototype.slice.call(document.querySelectorAll('.tv-focusable'));
-        currentMenuIndex = 0;
-        updateMenuVisuals();
-    }
-
-    function updateMenuVisuals() {
-        for (var i = 0; i < menuItems.length; i++) {
-            if (i === currentMenuIndex && !gameStarted) {
-                menuItems[i].classList.add('focused');
-                menuItems[i].focus();
-            } else {
-                menuItems[i].classList.remove('focused');
-            }
+    function forceTVFocus() {
+        if (!gameStarted && startButton) {
+            startButton.classList.add('focused');
+            startButton.focus();
         }
     }
 
@@ -137,14 +125,16 @@ window.addEventListener('load', function() {
     }
 
     function updateSlotVisuals() {
-        slots.forEach(function(slot, idx) {
-            slot.innerText = String.fromCharCode(initialsArray[idx]);
-            if (idx === activeSlotIndex) {
-                slot.classList.add('active-slot');
-            } else {
-                slot.classList.remove('active-slot');
+        for (var i = 0; i < slots.length; i++) {
+            if (slots[i]) {
+                slots[i].innerText = String.fromCharCode(initialsArray[i]);
+                if (i === activeSlotIndex) {
+                    slots[i].classList.add('active-slot');
+                } else {
+                    slots[i].classList.remove('active-slot');
+                }
             }
-        });
+        }
     }
 
     function startGameSequence() {
@@ -229,7 +219,7 @@ window.addEventListener('load', function() {
         leaderboardContainer.style.display = 'block';
         leaderboardContainer.style.opacity = '1';
 
-        initMenuNavigation();
+        forceTVFocus();
 
         musicMenu.currentTime = 0;
         musicMenu.play().catch(function(e) { console.log(e); });
@@ -256,7 +246,11 @@ window.addEventListener('load', function() {
 
     window.addEventListener('keydown', function(event) {
         var keyCode = event.keyCode || event.which;
-        var keyName = event.key;
+        var keyName = event.key || "Unknown";
+
+        if (keyClickDebug) {
+            keyClickDebug.innerText = "Key Clicked: " + keyName + " (" + keyCode + ")";
+        }
 
         tryAutoplayMusic();
 
@@ -272,22 +266,8 @@ window.addEventListener('load', function() {
         var isEnter = (keyName === 'Enter' || keyName === 'Return' || keyCode === 13 || keyCode === 29443);
 
         if (!gameStarted) {
-            if (isUp) {
-                if (currentMenuIndex > 0) {
-                    currentMenuIndex--;
-                    updateMenuVisuals();
-                }
-            }
-            else if (isDown) {
-                if (currentMenuIndex < menuItems.length - 1) {
-                    currentMenuIndex++;
-                    updateMenuVisuals();
-                }
-            }
-            else if (isEnter) {
-                if (menuItems[currentMenuIndex] === startButton) {
-                    startGameSequence();
-                }
+            if (isEnter) {
+                startGameSequence();
             }
             return;
         }
@@ -329,7 +309,7 @@ window.addEventListener('load', function() {
 
     loadLeaderboard();
     updateCarPosition();
-    initMenuNavigation();
+    forceTVFocus();
 
     var obstaclePool = ['assets/obstacles/Tree_1.png', 'assets/obstacles/Tree_2.png', 'assets/obstacles/Tree_3.png', 'assets/obstacles/Boulder_1.png', 'assets/obstacles/Boulder_2.png', 'assets/obstacles/Boulder_3.png'];
     var activeObstacles = [];
