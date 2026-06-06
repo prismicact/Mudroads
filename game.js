@@ -43,7 +43,7 @@ window.addEventListener('load', () => {
 
     function triggerMenuMusic() {
         if(!gameStarted && musicMenu.paused) {
-            musicMenu.play().catch(e => console.log("Audio play blocked by browser sandbox policy rules:", e));
+            musicMenu.play().catch(e => console.log("Audio play blocked:", e));
         }
     }
 
@@ -221,7 +221,7 @@ window.addEventListener('load', () => {
         leaderboardContainer.style.opacity = '1';
 
         musicMenu.currentTime = 0;
-        musicMenu.play().catch(e => console.log("Menu loop track reset error:", e));
+        musicMenu.play().catch(e => console.log("Menu error:", e));
     }
 
     const START_SPAWN_THRESHOLD = 12; 
@@ -245,6 +245,10 @@ window.addEventListener('load', () => {
 
     window.addEventListener('keydown', (event) => {
         const keyCode = event.keyCode || event.which;
+
+        if ([37, 38, 39, 40, 13].includes(keyCode)) {
+            event.preventDefault();
+        }
 
         if (!gameStarted) {
             if (event.key === 'Enter' || keyCode === 13) {
@@ -316,7 +320,7 @@ window.addEventListener('load', () => {
         musicIntro.pause();
         musicLoop.pause();
 
-        sfxTa.play().catch(e => console.log("SFX Play Error"));
+        sfxTa.play().catch(e => console.log("SFX Error"));
         tryAgainImg.style.display = 'block';
 
         setTimeout(() => {
