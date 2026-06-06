@@ -1,36 +1,36 @@
-window.addEventListener('load', () => {
-    const gameWrapper = document.getElementById('game-wrapper');
-    const scalableContainer = document.getElementById('scalable-container');
-    const innerScreen = document.getElementById('inner-screen');
-    const roadLayer = document.getElementById('road-layer');
-    const car = document.getElementById('car');
-    const livesUI = document.getElementById('lives-ui-container');
-    const scoreDisplay = document.getElementById('score-display');
-    const tryAgainImg = document.getElementById('try-again-img');
-    const countdownImg = document.getElementById('countdown-img');
-    const startMenu = document.getElementById('start-menu');
-    const startButton = document.getElementById('start-button');
-    const leaderboardContainer = document.getElementById('leaderboard-container');
-    const leaderboardEntries = document.getElementById('leaderboard-entries');
-    const screenSizeDebug = document.getElementById('screen-size-debug');
-    const dPadTrap = document.getElementById('vidaa-dpad-trap');
+window.addEventListener('load', function() {
+    var gameWrapper = document.getElementById('game-wrapper');
+    var scalableContainer = document.getElementById('scalable-container');
+    var innerScreen = document.getElementById('inner-screen');
+    var roadLayer = document.getElementById('road-layer');
+    var car = document.getElementById('car');
+    var livesUI = document.getElementById('lives-ui-container');
+    var scoreDisplay = document.getElementById('score-display');
+    var tryAgainImg = document.getElementById('try-again-img');
+    var countdownImg = document.getElementById('countdown-img');
+    var startMenu = document.getElementById('start-menu');
+    var startButton = document.getElementById('start-button');
+    var leaderboardContainer = document.getElementById('leaderboard-container');
+    var leaderboardEntries = document.getElementById('leaderboard-entries');
+    var screenSizeDebug = document.getElementById('screen-size-debug');
+    var dPadTrap = document.getElementById('vidaa-dpad-trap');
     
-    const arcadeOverlay = document.getElementById('arcade-input-overlay');
-    const arcadeHeadline = document.getElementById('arcade-headline');
-    const slots = [document.getElementById('slot-0'), document.getElementById('slot-1'), document.getElementById('slot-2')];
-    let activeSlotIndex = 0;
-    let initialsArray = [65, 65, 65]; 
-    let arcadeInputActive = false;
-    let saveCallback = null;
+    var arcadeOverlay = document.getElementById('arcade-input-overlay');
+    var arcadeHeadline = document.getElementById('arcade-headline');
+    var slots = [document.getElementById('slot-0'), document.getElementById('slot-1'), document.getElementById('slot-2')];
+    var activeSlotIndex = 0;
+    var initialsArray = [65, 65, 65]; 
+    var arcadeInputActive = false;
+    var saveCallback = null;
 
-    let score = 0;
-    let currentLaneIndex = 1;
-    let playerLives = 3;
-    let gameStartTime = 0;
-    let isGameOver = false;
-    let gameStarted = false;
-    let runCountdownSequence = true; 
-    let scoreInterval = null;
+    var score = 0;
+    var currentLaneIndex = 1;
+    var playerLives = 3;
+    var gameStartTime = 0;
+    var isGameOver = false;
+    var gameStarted = false;
+    var runCountdownSequence = true; 
+    var scoreInterval = null;
 
     function lockIntoVIDAADPadMode() {
         if (dPadTrap) {
@@ -40,67 +40,67 @@ window.addEventListener('load', () => {
     lockIntoVIDAADPadMode();
     setInterval(lockIntoVIDAADPadMode, 1000);
 
-    const musicMenu = new Audio('assets/music/Menu.mp3');
+    var musicMenu = new Audio('assets/music/Menu.mp3');
     musicMenu.loop = true;
     
-    const musicIntro = new Audio('assets/music/Mudroads.wav');
-    const musicLoop = new Audio('assets/music/Mudroads_Loop.wav');
+    var musicIntro = new Audio('assets/music/Mudroads.wav');
+    var musicLoop = new Audio('assets/music/Mudroads_Loop.wav');
     musicLoop.loop = true; 
 
-    const sfxRsg = new Audio('assets/sfx/rsg.mp3');
-    const sfxTa = new Audio('assets/sfx/ta.mp3');
+    var sfxRsg = new Audio('assets/sfx/rsg.mp3');
+    var sfxTa = new Audio('assets/sfx/ta.mp3');
 
     function triggerMenuMusic() {
         if(!gameStarted && musicMenu.paused) {
-            musicMenu.play().catch(e => console.log("Audio play blocked:", e));
+            musicMenu.play().catch(function(e) { console.log(e); });
         }
     }
 
     window.addEventListener('keydown', triggerMenuMusic);
     window.addEventListener('click', triggerMenuMusic);
 
-    musicIntro.addEventListener('ended', () => {
+    musicIntro.addEventListener('ended', function() {
         if (!isGameOver) {
-            musicLoop.play().catch(e => console.log("Loop track engaged"));
+            musicLoop.play().catch(function(e) { console.log(e); });
         }
     });
 
     function calculateScreenAndScale() {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+        var width = window.innerWidth;
+        var height = window.innerHeight;
         
-        screenSizeDebug.innerText = `Size: ${width} x ${height}`;
+        screenSizeDebug.innerText = "Size: " + width + " x " + height;
 
-        const scaleX = width / 1100; 
-        const scaleY = height / 950;
-        const bestScaleFactor = Math.min(scaleX, scaleY);
+        var scaleX = width / 1100; 
+        var scaleY = height / 950;
+        var bestScaleFactor = Math.min(scaleX, scaleY);
 
-        scalableContainer.style.transform = `scale(${bestScaleFactor})`;
+        scalableContainer.style.transform = "scale(" + bestScaleFactor + ")";
     }
     window.addEventListener('resize', calculateScreenAndScale);
     calculateScreenAndScale();
 
     function loadLeaderboard() {
-        let data = JSON.parse(localStorage.getItem('mudroads_scores')) || [];
+        var data = JSON.parse(localStorage.getItem('mudroads_scores')) || [];
         leaderboardEntries.innerHTML = '';
-        for (let i = 0; i < 10; i++) {
-            const entry = document.createElement('div');
+        for (var i = 0; i < 10; i++) {
+            var entry = document.createElement('div');
             entry.className = 'leaderboard-entry';
             if (data[i]) {
-                entry.innerText = `${i + 1}. [${data[i].name}]: ${data[i].score}`;
+                entry.innerText = (i + 1) + '. [' + data[i].name + ']: ' + data[i].score;
             } else {
-                entry.innerText = `${i + 1}. [---]: 0`;
+                entry.innerText = (i + 1) + '. [---]: 0';
             }
             leaderboardEntries.appendChild(entry);
         }
     }
 
     function checkAndSaveScore(finalScore, onComplete) {
-        let data = JSON.parse(localStorage.getItem('mudroads_scores')) || [];
-        const qualifiesForTop10 = data.length < 10 || finalScore > data[data.length - 1].score;
+        var data = JSON.parse(localStorage.getItem('mudroads_scores')) || [];
+        var qualifiesForTop10 = data.length < 10 || finalScore > data[data.length - 1].score;
         
         if (qualifiesForTop10) {
-            const isAbsoluteHighScore = data.length === 0 || finalScore > data[0].score;
+            var isAbsoluteHighScore = data.length === 0 || finalScore > data[0].score;
             if (isAbsoluteHighScore) {
                 arcadeHeadline.innerHTML = "NEW HIGH SCORE!";
             } else {
@@ -113,10 +113,10 @@ window.addEventListener('load', () => {
             initialsArray = [65, 65, 65];
             updateSlotVisuals();
 
-            saveCallback = () => {
-                let finalInitials = String.fromCharCode(initialsArray[0], initialsArray[1], initialsArray[2]);
+            saveCallback = function() {
+                var finalInitials = String.fromCharCode(initialsArray[0], initialsArray[1], initialsArray[2]);
                 data.push({ name: finalInitials, score: finalScore });
-                data.sort((a, b) => b.score - a.score);
+                data.sort(function(a, b) { return b.score - a.score; });
                 data = data.slice(0, 10);
                 localStorage.setItem('mudroads_scores', JSON.stringify(data));
                 arcadeOverlay.style.display = 'none';
@@ -130,7 +130,7 @@ window.addEventListener('load', () => {
     }
 
     function updateSlotVisuals() {
-        slots.forEach((slot, idx) => {
+        slots.forEach(function(slot, idx) {
             slot.innerText = String.fromCharCode(initialsArray[idx]);
             if (idx === activeSlotIndex) {
                 slot.classList.add('active-slot');
@@ -147,7 +147,7 @@ window.addEventListener('load', () => {
         startMenu.style.display = 'none';
         
         leaderboardContainer.style.opacity = '0';
-        setTimeout(() => {
+        setTimeout(function() {
             if(gameStarted) leaderboardContainer.style.display = 'none';
         }, 300);
 
@@ -155,30 +155,30 @@ window.addEventListener('load', () => {
         scoreDisplay.style.display = 'block';
         
         gameStarted = true;
-        sfxRsg.play().catch(e => console.log("SFX Blocked"));
+        sfxRsg.play().catch(function(e) { console.log(e); });
 
         countdownImg.style.display = 'block';
         countdownImg.src = 'assets/misc/Ready.png';
         
-        setTimeout(() => {
+        setTimeout(function() {
             countdownImg.src = 'assets/misc/Set.png';
         }, 1000);
 
-        setTimeout(() => {
+        setTimeout(function() {
             countdownImg.src = 'assets/misc/Go.png';
             
             runCountdownSequence = false;
             gameStartTime = Date.now();
-            musicIntro.play().catch(e => console.log("Audio Blocked"));
+            musicIntro.play().catch(function(e) { console.log(e); });
 
-            scoreInterval = setInterval(() => {
+            scoreInterval = setInterval(function() {
                 if (!isGameOver) {
                     score += 1;
-                    scoreDisplay.innerText = `Score: ${score}`;
+                    scoreDisplay.innerText = "Score: " + score;
                 }
             }, 1000);
 
-            setTimeout(() => {
+            setTimeout(function() {
                 countdownImg.style.display = 'none';
             }, 600);
         }, 2000);
@@ -186,13 +186,13 @@ window.addEventListener('load', () => {
         requestAnimationFrame(updateGame);
     }
 
-    startButton.addEventListener('click', (e) => {
+    startButton.addEventListener('click', function(e) {
         e.stopPropagation();
         if(!gameStarted) startGameSequence();
     });
 
     function resetToMainMenu() {
-        for (let i = activeObstacles.length - 1; i >= 0; i--) {
+        for (var i = activeObstacles.length - 1; i >= 0; i--) {
             activeObstacles[i].element.remove();
         }
         activeObstacles.length = 0;
@@ -217,8 +217,8 @@ window.addEventListener('load', () => {
         tryAgainImg.style.display = 'none';
         livesUI.style.display = 'none';
         
-        const hearts = livesUI.getElementsByClassName('life-heart');
-        for (let i = 0; i < hearts.length; i++) {
+        var hearts = livesUI.getElementsByClassName('life-heart');
+        for (var i = 0; i < hearts.length; i++) {
             hearts[i].style.visibility = 'visible';
         }
         
@@ -232,42 +232,42 @@ window.addEventListener('load', () => {
         lockIntoVIDAADPadMode();
 
         musicMenu.currentTime = 0;
-        musicMenu.play().catch(e => console.log("Menu error:", e));
+        musicMenu.play().catch(function(e) { console.log(e); });
     }
 
-    const START_SPAWN_THRESHOLD = 12; 
-    const MAX_SPAWN_THRESHOLD = 7;     
-    const SPAWN_RAMP_SPEED = 10;       
-    let nextRandomizedThreshold = START_SPAWN_THRESHOLD;
+    var START_SPAWN_THRESHOLD = 12; 
+    var MAX_SPAWN_THRESHOLD = 7;     
+    var SPAWN_RAMP_SPEED = 10;       
+    var nextRandomizedThreshold = START_SPAWN_THRESHOLD;
 
-    const screenWidth = 750;
-    const middleLaneOrigin = screenWidth / 2;
-    const carLaneSpacing = 200; 
-    const carLanes = [middleLaneOrigin - carLaneSpacing, middleLaneOrigin, middleLaneOrigin + carLaneSpacing];
-    const obstacleLaneSpacing = 235; 
-    const obstacleLanes = [middleLaneOrigin - obstacleLaneSpacing, middleLaneOrigin, middleLaneOrigin + obstacleLaneSpacing];
+    var screenWidth = 750;
+    var middleLaneOrigin = screenWidth / 2;
+    var carLaneSpacing = 200; 
+    var carLanes = [middleLaneOrigin - carLaneSpacing, middleLaneOrigin, middleLaneOrigin + carLaneSpacing];
+    var obstacleLaneSpacing = 235; 
+    var obstacleLanes = [middleLaneOrigin - obstacleLaneSpacing, middleLaneOrigin, middleLaneOrigin + obstacleLaneSpacing];
     
-    function updateCarPosition() { car.style.left = `${carLanes[currentLaneIndex]}px`; }
+    function updateCarPosition() { car.style.left = carLanes[currentLaneIndex] + "px"; }
     
     function updateLivesUI() {
-        const hearts = livesUI.getElementsByClassName('life-heart');
+        var hearts = livesUI.getElementsByClassName('life-heart');
         if (playerLives >= 0 && playerLives < hearts.length) hearts[playerLives].style.visibility = 'hidden';
     }
 
-    window.addEventListener('keydown', (event) => {
-        const keyCode = event.keyCode || event.which;
-        const keyName = event.key;
+    window.addEventListener('keydown', function(event) {
+        var keyCode = event.keyCode || event.which;
+        var keyName = event.key;
 
-        if ([37, 38, 39, 40, 13, 29443].includes(keyCode)) {
+        if ([37, 38, 39, 40, 13, 29443].indexOf(keyCode) !== -1) {
             event.preventDefault();
             event.stopPropagation();
         }
 
-        const isLeft = (keyName === 'ArrowLeft' || keyName === 'Left' || keyCode === 37);
-        const isRight = (keyName === 'ArrowRight' || keyName === 'Right' || keyCode === 39);
-        const isUp = (keyName === 'ArrowUp' || keyName === 'Up' || keyCode === 38);
-        const isDown = (keyName === 'ArrowDown' || keyName === 'Down' || keyCode === 40);
-        const isEnter = (keyName === 'Enter' || keyName === 'Return' || keyCode === 13 || keyCode === 29443);
+        var isLeft = (keyName === 'ArrowLeft' || keyName === 'Left' || keyCode === 37);
+        var isRight = (keyName === 'ArrowRight' || keyName === 'Right' || keyCode === 39);
+        var isUp = (keyName === 'ArrowUp' || keyName === 'Up' || keyCode === 38);
+        var isDown = (keyName === 'ArrowDown' || keyName === 'Down' || keyCode === 40);
+        var isEnter = (keyName === 'Enter' || keyName === 'Return' || keyCode === 13 || keyCode === 29443);
 
         if (!gameStarted) {
             if (isEnter) {
@@ -313,21 +313,21 @@ window.addEventListener('load', () => {
 
     updateCarPosition();
 
-    const obstaclePool = ['assets/obstacles/Tree_1.png', 'assets/obstacles/Tree_2.png', 'assets/obstacles/Tree_3.png', 'assets/obstacles/Boulder_1.png', 'assets/obstacles/Boulder_2.png', 'assets/obstacles/Boulder_3.png'];
-    const activeObstacles = [];
-    const roadTopY = 140; roadBottomY = 650;
-    const roadHeight = roadBottomY - roadTopY;
-    const perspectiveCurve = 0.9; 
-    let masterFrameCount = 0;
-    let retroStepsCount = 0;
-    let isBlinking = false;
-    let blinkTimer = 0;
+    var obstaclePool = ['assets/obstacles/Tree_1.png', 'assets/obstacles/Tree_2.png', 'assets/obstacles/Tree_3.png', 'assets/obstacles/Boulder_1.png', 'assets/obstacles/Boulder_2.png', 'assets/obstacles/Boulder_3.png'];
+    var activeObstacles = [];
+    var roadTopY = 140, roadBottomY = 650;
+    var roadHeight = roadBottomY - roadTopY;
+    var perspectiveCurve = 0.9; 
+    var masterFrameCount = 0;
+    var retroStepsCount = 0;
+    var isBlinking = false;
+    var blinkTimer = 0;
 
     function spawnObstacle() {
-        const randomAsset = obstaclePool[Math.floor(Math.random() * obstaclePool.length)];
-        const img = document.createElement('img');
+        var randomAsset = obstaclePool[Math.floor(Math.random() * obstaclePool.length)];
+        var img = document.createElement('img');
         img.src = randomAsset; img.className = 'obstacle';
-        const spawnLaneIndex = Math.floor(Math.random() * obstacleLanes.length);
+        var spawnLaneIndex = Math.floor(Math.random() * obstacleLanes.length);
         innerScreen.appendChild(img);
         activeObstacles.push({ element: img, step: -1, totalSteps: 12, baseWidth: 64, baseHeight: 64, laneIndex: spawnLaneIndex });
     }
@@ -339,11 +339,11 @@ window.addEventListener('load', () => {
         musicIntro.pause();
         musicLoop.pause();
 
-        sfxTa.play().catch(e => console.log("SFX Error"));
+        sfxTa.play().catch(function(e) { console.log(e); });
         tryAgainImg.style.display = 'block';
 
-        setTimeout(() => {
-            checkAndSaveScore(score, () => {
+        setTimeout(function() {
+            checkAndSaveScore(score, function() {
                 resetToMainMenu();
             });
         }, 3000); 
@@ -358,10 +358,10 @@ window.addEventListener('load', () => {
 
         masterFrameCount++;
 
-        const elapsed = (Date.now() - gameStartTime) / 1000;
-        const speedFactor = Math.max(3, 6 - (elapsed / 20)); 
-        const retroFrameDelay = Math.floor(speedFactor);
-        const baseSpawnFactor = Math.max(MAX_SPAWN_THRESHOLD, START_SPAWN_THRESHOLD - (elapsed / SPAWN_RAMP_SPEED));
+        var elapsed = (Date.now() - gameStartTime) / 1000;
+        var speedFactor = Math.max(3, 6 - (elapsed / 20)); 
+        var retroFrameDelay = Math.floor(speedFactor);
+        var baseSpawnFactor = Math.max(7, 12 - (elapsed / 10));
 
         if (isBlinking) {
             blinkTimer--;
@@ -375,25 +375,25 @@ window.addEventListener('load', () => {
             if (retroStepsCount >= nextRandomizedThreshold) { 
                 spawnObstacle(); 
                 retroStepsCount = 0; 
-                const drift = (Math.random() * 2) - 1; 
+                var drift = (Math.random() * 2) - 1; 
                 nextRandomizedThreshold = baseSpawnFactor + drift;
             }
 
-            for (let i = activeObstacles.length - 1; i >= 0; i--) {
-                const obs = activeObstacles[i];
+            for (var i = activeObstacles.length - 1; i >= 0; i--) {
+                var obs = activeObstacles[i];
                 obs.step++; 
                 if (obs.step >= obs.totalSteps) { obs.element.remove(); activeObstacles.splice(i, 1); continue; }
 
                 obs.element.style.visibility = 'visible';
                 obs.element.style.zIndex = (obs.step > 10) ? "6" : (obs.step > 0 ? "4" : "2");
 
-                const progress = obs.step / (obs.totalSteps - 1);
-                const maxAllowedScale = 2.5; 
-                const currentScale = Math.min(0.4 + (3 - 0.4) * progress, maxAllowedScale);
-                obs.element.style.width = `${obs.baseWidth * currentScale}px`;
-                obs.element.style.height = `${obs.baseHeight * currentScale}px`;
-                obs.element.style.top = `${roadTopY + (roadHeight * (progress * progress))}px`;
-                obs.element.style.left = `${(middleLaneOrigin) + (obstacleLanes[obs.laneIndex] - middleLaneOrigin) * Math.pow(progress, perspectiveCurve)}px`;
+                var progress = obs.step / (obs.totalSteps - 1);
+                var maxAllowedScale = 2.5; 
+                var currentScale = Math.min(0.4 + (3 - 0.4) * progress, maxAllowedScale);
+                obs.element.style.width = (obs.baseWidth * currentScale) + "px";
+                obs.element.style.height = (obs.baseHeight * currentScale) + "px";
+                obs.element.style.top = (roadTopY + (roadHeight * (progress * progress))) + "px";
+                obs.element.style.left = ((middleLaneOrigin) + (obstacleLanes[obs.laneIndex] - middleLaneOrigin) * Math.pow(progress, perspectiveCurve)) + "px";
 
                 if (obs.step === 10 && obs.laneIndex === currentLaneIndex && !isBlinking) {
                     obs.element.remove();
