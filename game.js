@@ -244,9 +244,16 @@ window.addEventListener('load', function() {
         if (playerLives >= 0 && playerLives < hearts.length) hearts[playerLives].style.visibility = 'hidden';
     }
 
-    window.addEventListener('keydown', function(event) {
+window.addEventListener('keydown', function(event) {
         var keyCode = event.keyCode || event.which;
         var keyName = event.key || "Unknown";
+
+        // Map Keys: 4=Left, 6=Right, 8=Down, 2=Up (unused), 5=OK/Enter
+        var isLeft = (keyName === 'ArrowLeft' || keyCode === 37 || keyCode === 52 || keyCode === 100);
+        var isRight = (keyName === 'ArrowRight' || keyCode === 39 || keyCode === 54 || keyCode === 102);
+        var isUp = (keyName === 'ArrowUp' || keyCode === 38 || keyCode === 50 || keyCode === 98);
+        var isDown = (keyName === 'ArrowDown' || keyCode === 40 || keyCode === 56 || keyCode === 104);
+        var isEnter = (keyName === 'Enter' || keyCode === 13 || keyCode === 53 || keyCode === 101);
 
         if (keyClickDebug) {
             keyClickDebug.innerText = "Key Clicked: " + keyName + " (" + keyCode + ")";
@@ -254,33 +261,26 @@ window.addEventListener('load', function() {
 
         tryAutoplayMusic();
 
-        if ([37, 38, 39, 40, 13, 29443].indexOf(keyCode) !== -1) {
+        // Prevent browser scrolling for game keys
+        if ([37, 38, 39, 40, 13, 52, 54, 50, 56, 53, 98, 100, 101, 102, 104].indexOf(keyCode) !== -1) {
             event.preventDefault();
             event.stopPropagation();
         }
 
-        var isLeft = (keyName === 'ArrowLeft' || keyName === 'Left' || keyCode === 37);
-        var isRight = (keyName === 'ArrowRight' || keyName === 'Right' || keyCode === 39);
-        var isUp = (keyName === 'ArrowUp' || keyName === 'Up' || keyCode === 38);
-        var isDown = (keyName === 'ArrowDown' || keyName === 'Down' || keyCode === 40);
-        var isEnter = (keyName === 'Enter' || keyName === 'Return' || keyCode === 13 || keyCode === 29443);
-
         if (!gameStarted) {
-            if (isEnter) {
-                startGameSequence();
-            }
+            if (isEnter) startGameSequence();
             return;
         }
 
         if (arcadeInputActive) {
             if (isUp) {
-                initialsArray[activeSlotIndex]++;
-                if (initialsArray[activeSlotIndex] > 90) initialsArray[activeSlotIndex] = 65; 
+                initialsArray[activeSlotIndex]--;
+                if (initialsArray[activeSlotIndex] < 65) initialsArray[activeSlotIndex] = 90; 
                 updateSlotVisuals();
             }
             else if (isDown) {
-                initialsArray[activeSlotIndex]--;
-                if (initialsArray[activeSlotIndex] < 65) initialsArray[activeSlotIndex] = 90; 
+                initialsArray[activeSlotIndex]++;
+                if (initialsArray[activeSlotIndex] > 90) initialsArray[activeSlotIndex] = 65; 
                 updateSlotVisuals();
             }
             else if (isLeft) {
