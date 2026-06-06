@@ -13,6 +13,7 @@ window.addEventListener('load', () => {
     const leaderboardContainer = document.getElementById('leaderboard-container');
     const leaderboardEntries = document.getElementById('leaderboard-entries');
     const screenSizeDebug = document.getElementById('screen-size-debug');
+    const dPadTrap = document.getElementById('vidaa-dpad-trap');
     
     const arcadeOverlay = document.getElementById('arcade-input-overlay');
     const arcadeHeadline = document.getElementById('arcade-headline');
@@ -30,6 +31,14 @@ window.addEventListener('load', () => {
     let gameStarted = false;
     let runCountdownSequence = true; 
     let scoreInterval = null;
+
+    function lockIntoVIDAADPadMode() {
+        if (dPadTrap) {
+            dPadTrap.focus();
+        }
+    }
+    lockIntoVIDAADPadMode();
+    setInterval(lockIntoVIDAADPadMode, 1000);
 
     const musicMenu = new Audio('assets/music/Menu.mp3');
     musicMenu.loop = true;
@@ -220,6 +229,8 @@ window.addEventListener('load', () => {
         leaderboardContainer.style.display = 'block';
         leaderboardContainer.style.opacity = '1';
 
+        lockIntoVIDAADPadMode();
+
         musicMenu.currentTime = 0;
         musicMenu.play().catch(e => console.log("Menu error:", e));
     }
@@ -245,38 +256,46 @@ window.addEventListener('load', () => {
 
     window.addEventListener('keydown', (event) => {
         const keyCode = event.keyCode || event.which;
+        const keyName = event.key;
 
-        if ([37, 38, 39, 40, 13].includes(keyCode)) {
+        if ([37, 38, 39, 40, 13, 29443].includes(keyCode)) {
             event.preventDefault();
+            event.stopPropagation();
         }
 
+        const isLeft = (keyName === 'ArrowLeft' || keyName === 'Left' || keyCode === 37);
+        const isRight = (keyName === 'ArrowRight' || keyName === 'Right' || keyCode === 39);
+        const isUp = (keyName === 'ArrowUp' || keyName === 'Up' || keyCode === 38);
+        const isDown = (keyName === 'ArrowDown' || keyName === 'Down' || keyCode === 40);
+        const isEnter = (keyName === 'Enter' || keyName === 'Return' || keyCode === 13 || keyCode === 29443);
+
         if (!gameStarted) {
-            if (event.key === 'Enter' || keyCode === 13) {
+            if (isEnter) {
                 startGameSequence();
             }
             return;
         }
 
         if (arcadeInputActive) {
-            if (event.key === 'ArrowUp' || keyCode === 38) {
+            if (isUp) {
                 initialsArray[activeSlotIndex]++;
                 if (initialsArray[activeSlotIndex] > 90) initialsArray[activeSlotIndex] = 65; 
                 updateSlotVisuals();
             }
-            else if (event.key === 'ArrowDown' || keyCode === 40) {
-                initialsArray[activeSlotIndex]--;
+            else if (isDown) {
+                initialsArray[activeSlotIndex Antisec]--;
                 if (initialsArray[activeSlotIndex] < 65) initialsArray[activeSlotIndex] = 90; 
                 updateSlotVisuals();
             }
-            else if (event.key === 'ArrowLeft' || keyCode === 37) {
+            else if (isLeft) {
                 if (activeSlotIndex > 0) activeSlotIndex--;
                 updateSlotVisuals();
             }
-            else if (event.key === 'ArrowRight' || keyCode === 39) {
+            else if (isRight) {
                 if (activeSlotIndex < 2) activeSlotIndex++;
                 updateSlotVisuals();
             }
-            else if (event.key === 'Enter' || keyCode === 13) {
+            else if (isEnter) {
                 if (saveCallback) saveCallback();
             }
             return; 
@@ -284,10 +303,10 @@ window.addEventListener('load', () => {
 
         if (isGameOver || runCountdownSequence) return;
 
-        if (event.key === 'ArrowLeft' || keyCode === 37) { 
+        if (isLeft) { 
             if (currentLaneIndex > 0) { currentLaneIndex--; updateCarPosition(); } 
         }
-        else if (event.key === 'ArrowRight' || keyCode === 39) { 
+        else if (isRight) { 
             if (currentLaneIndex < carLanes.length - 1) { currentLaneIndex++; updateCarPosition(); } 
         }
     });
