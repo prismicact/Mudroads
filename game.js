@@ -1,269 +1,437 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mudroads</title>
-    <link rel="icon" type="image/png" href="assets/misc/icon.png?v=2">
-    <style>
-        @font-face {
-            font-family: 'MyPixelFont';
-            src: url('fonts/PressStart2P-Regular.ttf') format('truetype');
+window.addEventListener('load', function() {
+    var gameWrapper = document.getElementById('game-wrapper');
+    var scalableContainer = document.getElementById('scalable-container');
+    var innerScreen = document.getElementById('inner-screen');
+    var roadLayer = document.getElementById('road-layer');
+    var car = document.getElementById('car');
+    var livesUI = document.getElementById('lives-ui-container');
+    var scoreDisplay = document.getElementById('score-display');
+    var tryAgainImg = document.getElementById('try-again-img');
+    var countdownImg = document.getElementById('countdown-img');
+    var startMenu = document.getElementById('start-menu');
+    var startButton = document.getElementById('start-button');
+    var leaderboardContainer = document.getElementById('leaderboard-container');
+    var leaderboardEntries = document.getElementById('leaderboard-entries');
+    var screenSizeDebug = document.getElementById('screen-size-debug');
+    
+    var arcadeOverlay = document.getElementById('arcade-input-overlay');
+    var arcadeHeadline = document.getElementById('arcade-headline');
+    var slots = [document.getElementById('slot-0'), document.getElementById('slot-1'), document.getElementById('slot-2')];
+    var activeSlotIndex = 0;
+    var initialsArray = [65, 65, 65]; 
+    var arcadeInputActive = false;
+    var saveCallback = null;
+
+    var menuItems = [];
+    var currentMenuIndex = 0;
+
+    var score = 0;
+    var currentLaneIndex = 1;
+    var playerLives = 3;
+    var gameStartTime = 0;
+    var isGameOver = false;
+    var gameStarted = false;
+    var runCountdownSequence = true; 
+    var scoreInterval = null;
+
+    var musicMenu = new Audio('assets/music/Menu.mp3');
+    musicMenu.loop = true;
+    
+    var musicIntro = new Audio('assets/music/Mudroads.wav');
+    var musicLoop = new Audio('assets/music/Mudroads_Loop.wav');
+    musicLoop.loop = true; 
+
+    var sfxRsg = new Audio('assets/sfx/rsg.mp3');
+    var sfxTa = new Audio('assets/sfx/ta.mp3');
+
+    function initMenuNavigation() {
+        menuItems = Array.prototype.slice.call(document.querySelectorAll('.tv-focusable'));
+        currentMenuIndex = 0;
+        updateMenuVisuals();
+    }
+
+    function updateMenuVisuals() {
+        for (var i = 0; i < menuItems.length; i++) {
+            if (i === currentMenuIndex && !gameStarted) {
+                menuItems[i].classList.add('focused');
+                menuItems[i].focus();
+            } else {
+                menuItems[i].classList.remove('focused');
+            }
         }
+    }
 
-        html, body, * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            user-select: none; 
-            -webkit-user-select: none;
-            outline: none !important;
-            -webkit-tap-highlight-color: transparent;
+    function tryAutoplayMusic() {
+        if (!gameStarted && musicMenu.paused) {
+            musicMenu.play().catch(function(e) { console.log(e); });
         }
+    }
 
-        body {
-            width: 100vw; height: 100vh;
-            background-color: #000000;
-            display: block; font-family: sans-serif;
+    musicIntro.addEventListener('ended', function() {
+        if (!isGameOver) {
+            musicLoop.play().catch(function(e) { console.log(e); });
         }
+    });
 
-        #fullscreen-prompt {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background-color: #000000;
-            z-index: 99999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: 'MyPixelFont', sans-serif;
-            color: #ffffff;
-            cursor: pointer;
+    function calculateScreenAndScale() {
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+        screenSizeDebug.innerText = "Size: " + width + " x " + height;
+
+        var scaleX = width / 1100; 
+        var scaleY = height / 950;
+        var bestScaleFactor = Math.min(scaleX, scaleY);
+
+        scalableContainer.style.transform = "scale(" + bestScaleFactor + ")";
+    }
+    window.addEventListener('resize', calculateScreenAndScale);
+    calculateScreenAndScale();
+
+    function loadLeaderboard() {
+        var data = JSON.parse(localStorage.getItem('mudroads_scores')) || [];
+        leaderboardEntries.innerHTML = '';
+        for (var i = 0; i < 10; i++) {
+            var entry = document.createElement('div');
+            entry.className = 'leaderboard-entry';
+            if (data[i]) {
+                entry.innerText = (i + 1) + '. [' + data[i].name + ']: ' + data[i].score;
+            } else {
+                entry.innerText = (i + 1) + '. [---]: 0';
+            }
+            leaderboardEntries.appendChild(entry);
         }
+    }
 
-        #prompt-text {
-            font-size: 20px;
-            color: #ffd700;
-            text-align: center;
-            line-height: 1.8;
-            animation: promptBlink 1s infinite steps(2, start);
-        }
-
-        @keyframes promptBlink {
-            to { visibility: hidden; }
-        }
-
-        #screen-size-debug {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background-color: rgba(0, 0, 0, 0.85);
-            color: #00ff00;
-            font-family: monospace;
-            font-size: 14px;
-            padding: 6px 12px;
-            border: 1px solid #00ff00;
-            border-radius: 4px;
-            z-index: 9999;
-            pointer-events: none;
-        }
-
-        #leaderboard-container {
-            position: fixed;
-            left: 20px; 
-            top: 50%;
-            transform: translateY(-50%);
-            width: 240px;
-            color: #ffffff;
-            font-family: 'MyPixelFont', sans-serif;
-            text-shadow: 2px 2px #000000;
-            z-index: 5000;
-            transition: opacity 0.3s ease;
-        }
-
-        #leaderboard-title { font-size: 16px; color: #ffff00; margin-bottom: 15px; border-bottom: 2px solid white; padding-bottom: 5px; }
-        .leaderboard-entry { font-size: 12px; margin-bottom: 10px; text-transform: uppercase; }
-
-        #arcade-input-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background-color: rgba(0, 0, 0, 0.95);
-            z-index: 9000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: 'MyPixelFont', sans-serif;
-            color: white;
-        }
-
-        #arcade-headline { color: #ffff00; font-size: 32px; margin-bottom: 40px; text-align: center; line-height: 1.5; text-shadow: 3px 3px #000000; }
-        .initials-entry-container { display: flex; gap: 25px; margin-bottom: 50px; }
+    function checkAndSaveScore(finalScore, onComplete) {
+        var data = JSON.parse(localStorage.getItem('mudroads_scores')) || [];
+        var qualifiesForTop10 = data.length < 10 || finalScore > data[data.length - 1].score;
         
-        .letter-slot {
-            font-size: 64px; width: 80px; text-align: center;
-            border-bottom: 8px solid #555555; padding-bottom: 10px;
-            text-shadow: 4px 4px #000000;
+        if (qualifiesForTop10) {
+            var isAbsoluteHighScore = data.length === 0 || finalScore > data[0].score;
+            if (isAbsoluteHighScore) {
+                arcadeHeadline.innerHTML = "NEW HIGH SCORE!";
+            } else {
+                arcadeHeadline.innerHTML = "GAME ENDED!";
+            }
+
+            arcadeInputActive = true;
+            arcadeOverlay.style.display = 'flex';
+            activeSlotIndex = 0;
+            initialsArray = [65, 65, 65];
+            updateSlotVisuals();
+
+            saveCallback = function() {
+                var finalInitials = String.fromCharCode(initialsArray[0], initialsArray[1], initialsArray[2]);
+                data.push({ name: finalInitials, score: finalScore });
+                data.sort(function(a, b) { return b.score - a.score; });
+                data = data.slice(0, 10);
+                localStorage.setItem('mudroads_scores', JSON.stringify(data));
+                arcadeOverlay.style.display = 'none';
+                arcadeInputActive = false;
+                loadLeaderboard(); 
+                onComplete();
+            };
+        } else {
+            onComplete();
         }
-        .letter-slot.active-slot { border-bottom-color: #00ff00; color: #00ff00; }
-        #tv-instructions { font-size: 14px; color: #aaaaaa; text-align: center; line-height: 2.2; letter-spacing: 1px; }
+    }
 
-        #game-wrapper {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 100vw; height: 100vh;
-            background: linear-gradient(to bottom, rgb(20, 20, 20), rgb(8, 8, 8));
-            opacity: 1;
-            transition: opacity 0.5s ease;
-        }
+    function updateSlotVisuals() {
+        slots.forEach(function(slot, idx) {
+            slot.innerText = String.fromCharCode(initialsArray[idx]);
+            if (idx === activeSlotIndex) {
+                slot.classList.add('active-slot');
+            } else {
+                slot.classList.remove('active-slot');
+            }
+        });
+    }
 
-        #scalable-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 760px;
-            position: relative;
-            transform-origin: center center;
-            padding-bottom: 60px; 
-        }
+    function startGameSequence() {
+        gameStarted = true;
+        musicMenu.pause();
+        startMenu.style.display = 'none';
+        
+        leaderboardContainer.style.opacity = '0';
+        setTimeout(function() {
+            if(gameStarted) leaderboardContainer.style.display = 'none';
+        }, 300);
 
-        #score-display {
-            color: #ffffff; font-family: 'MyPixelFont', sans-serif; font-size: 24px;
-            margin-bottom: 15px; text-align: center; pointer-events: none;
-            display: none; 
-            min-height: 30px;
-        }
+        livesUI.style.display = 'flex';
+        scoreDisplay.style.display = 'block';
+        
+        sfxRsg.play().catch(function(e) { console.log(e); });
 
-        #outer-frame {
-            width: 760px; height: 600px; border: 2px solid #ffffff;
-            display: flex; justify-content: center; align-items: center; position: relative;
-        }
+        countdownImg.style.display = 'block';
+        countdownImg.src = 'assets/misc/Ready.png';
+        
+        setTimeout(function() {
+            countdownImg.src = 'assets/misc/Set.png';
+        }, 1000);
 
-        #inner-screen { width: 750px; height: 590px; background-color: #000000; position: relative; }
-		
-        #sky-layer { width: 750px; height: 300px; position: absolute; top: 0; left: 0; z-index: 1; }
-        #road-layer { width: 750px; height: 480px; position: absolute; bottom: 0; left: 0; z-index: 3; }
-        #car { width: 96px; height: 140px; position: absolute; bottom: 20px; transform: translateX(-50%); z-index: 5; }
-
-        .obstacle { position: absolute; transform: translate(-50%, -50%); pointer-events: none; image-rendering: pixelated; visibility: visible; }
-
-        #lives-ui-container { 
-            position: absolute;
-            left: 0;
-            bottom: 10px; 
-            display: flex; 
-            gap: 8px; 
-            z-index: 500; 
-            display: none; 
-        }
-        .life-heart { width: 36px; height: 36px; image-rendering: pixelated; }
-
-        #try-again-img, #countdown-img {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 342px; height: 128px;
-            image-rendering: pixelated;
-            display: none;
-            z-index: 2000;
-        }
-
-        #start-menu {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); 
-            z-index: 3000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #menu-title {
-            font-family: 'MyPixelFont', sans-serif;
-            font-size: 56px;
-            color: #ffffff;
-            margin-bottom: 40px;
-            text-shadow: 5px 5px #000000;
-            letter-spacing: 2px;
-        }
-
-        #start-button {
-            font-family: 'MyPixelFont', sans-serif;
-            font-size: 24px;
-            color: #ffd700;
-            background: transparent;
-            border: none;
-            text-shadow: 3px 3px 0px #000000;
-            letter-spacing: 1px;
-            animation: retroBlink 0.8s infinite steps(2, start);
-        }
-
-        @keyframes retroBlink {
-            to { visibility: hidden; }
-        }
-    </style>
-</head>
-<body>
-
-    <div id="fullscreen-prompt">
-        <div id="prompt-text">CLICK HERE OR PRESS ANY KEY<br>TO ENTER FULLSCREEN & START</div>
-    </div>
-
-    <div id="screen-size-debug">Size: 0 x 0</div>
-
-    <div id="leaderboard-container">
-        <div id="leaderboard-title">TOP 10 RECORDS</div>
-        <div id="leaderboard-entries"></div>
-    </div>
-
-    <div id="arcade-input-overlay">
-        <h2 id="arcade-headline">GAME ENDED!</h2>
-        <div class="initials-entry-container">
-            <div id="slot-0" class="letter-slot active-slot">A</div>
-            <div id="slot-1" class="letter-slot">A</div>
-            <div id="slot-2" class="letter-slot">A</div>
-        </div>
-        <div id="tv-instructions">
-            UP/DOWN CHANGE LETTER &nbsp;&nbsp; LEFT/RIGHT CHANGE SLOT<br>
-            PRESS [OK] TO SAVE
-        </div>
-    </div>
-
-    <div id="game-wrapper">
-        <div id="scalable-container">
+        setTimeout(function() {
+            countdownImg.src = 'assets/misc/Go.png';
             
-            <div id="score-display">Score: 0</div>
+            runCountdownSequence = false;
+            gameStartTime = Date.now();
+            musicIntro.play().catch(function(e) { console.log(e); });
 
-            <div id="outer-frame">
-                <div id="start-menu">
-                    <div id="menu-title">MUDROADS</div>
-                    <div id="start-button">Press OK to Start</div>
-                </div>
+            scoreInterval = setInterval(function() {
+                if (!isGameOver) {
+                    score += 1;
+                    scoreDisplay.innerText = "Score: " + score;
+                }
+            }, 1000);
 
-                <div id="inner-screen">
-                    <img id="try-again-img" src="assets/misc/Try_Again.png" alt="Try Again">
-                    <img id="countdown-img" src="" alt="Countdown">
+            setTimeout(function() {
+                countdownImg.style.display = 'none';
+            }, 600);
+        }, 2000);
 
-                    <img id="sky-layer" src="assets/misc/Sky.png" alt="Sky">
-                    <img id="road-layer" src="assets/misc/Road.gif" alt="Road">
-                    <img id="car" src="assets/misc/Car.gif" alt="Car">
-                </div>
-            </div>
+        requestAnimationFrame(updateGame);
+    }
 
-            <div id="lives-ui-container">
-                <img class="life-heart" src="assets/misc/Life.png" alt="Life">
-                <img class="life-heart" src="assets/misc/Life.png" alt="Life">
-                <img class="life-heart" src="assets/misc/Life.png" alt="Life">
-            </div>
+    function resetToMainMenu() {
+        for (var i = activeObstacles.length - 1; i >= 0; i--) {
+            activeObstacles[i].element.remove();
+        }
+        activeObstacles.length = 0;
 
-        </div>
-    </div>
+        musicIntro.currentTime = 0;
+        musicLoop.currentTime = 0;
 
-    <script src="game.js"></script>
-</body>
-</html>
+        score = 0;
+        currentLaneIndex = 1;
+        playerLives = 3;
+        isGameOver = false;
+        gameStarted = false;
+        runCountdownSequence = true;
+        isBlinking = false;
+        blinkTimer = 0;
+        retroStepsCount = 0;
+        masterFrameCount = 0;
+        nextRandomizedThreshold = START_SPAWN_THRESHOLD;
+
+        scoreDisplay.innerText = "Score: 0";
+        scoreDisplay.style.display = 'none';
+        tryAgainImg.style.display = 'none';
+        livesUI.style.display = 'none';
+        
+        var hearts = livesUI.getElementsByClassName('life-heart');
+        for (var i = 0; i < hearts.length; i++) {
+            hearts[i].style.visibility = 'visible';
+        }
+        
+        car.style.visibility = 'visible';
+        updateCarPosition();
+
+        startMenu.style.display = 'flex';
+        leaderboardContainer.style.display = 'block';
+        leaderboardContainer.style.opacity = '1';
+
+        initMenuNavigation();
+
+        musicMenu.currentTime = 0;
+        musicMenu.play().catch(function(e) { console.log(e); });
+    }
+
+    var START_SPAWN_THRESHOLD = 12; 
+    var MAX_SPAWN_THRESHOLD = 7;     
+    var SPAWN_RAMP_SPEED = 10;       
+    var nextRandomizedThreshold = START_SPAWN_THRESHOLD;
+
+    var screenWidth = 750;
+    var middleLaneOrigin = screenWidth / 2;
+    var carLaneSpacing = 200; 
+    var carLanes = [middleLaneOrigin - carLaneSpacing, middleLaneOrigin, middleLaneOrigin + carLaneSpacing];
+    var obstacleLaneSpacing = 235; 
+    var obstacleLanes = [middleLaneOrigin - obstacleLaneSpacing, middleLaneOrigin, middleLaneOrigin + obstacleLaneSpacing];
+    
+    function updateCarPosition() { car.style.left = carLanes[currentLaneIndex] + "px"; }
+    
+    function updateLivesUI() {
+        var hearts = livesUI.getElementsByClassName('life-heart');
+        if (playerLives >= 0 && playerLives < hearts.length) hearts[playerLives].style.visibility = 'hidden';
+    }
+
+    window.addEventListener('keydown', function(event) {
+        var keyCode = event.keyCode || event.which;
+        var keyName = event.key;
+
+        tryAutoplayMusic();
+
+        if ([37, 38, 39, 40, 13, 29443].indexOf(keyCode) !== -1) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        var isLeft = (keyName === 'ArrowLeft' || keyName === 'Left' || keyCode === 37);
+        var isRight = (keyName === 'ArrowRight' || keyName === 'Right' || keyCode === 39);
+        var isUp = (keyName === 'ArrowUp' || keyName === 'Up' || keyCode === 38);
+        var isDown = (keyName === 'ArrowDown' || keyName === 'Down' || keyCode === 40);
+        var isEnter = (keyName === 'Enter' || keyName === 'Return' || keyCode === 13 || keyCode === 29443);
+
+        if (!gameStarted) {
+            if (isUp) {
+                if (currentMenuIndex > 0) {
+                    currentMenuIndex--;
+                    updateMenuVisuals();
+                }
+            }
+            else if (isDown) {
+                if (currentMenuIndex < menuItems.length - 1) {
+                    currentMenuIndex++;
+                    updateMenuVisuals();
+                }
+            }
+            else if (isEnter) {
+                if (menuItems[currentMenuIndex] === startButton) {
+                    startGameSequence();
+                }
+            }
+            return;
+        }
+
+        if (arcadeInputActive) {
+            if (isUp) {
+                initialsArray[activeSlotIndex]++;
+                if (initialsArray[activeSlotIndex] > 90) initialsArray[activeSlotIndex] = 65; 
+                updateSlotVisuals();
+            }
+            else if (isDown) {
+                initialsArray[activeSlotIndex]--;
+                if (initialsArray[activeSlotIndex] < 65) initialsArray[activeSlotIndex] = 90; 
+                updateSlotVisuals();
+            }
+            else if (isLeft) {
+                if (activeSlotIndex > 0) activeSlotIndex--;
+                updateSlotVisuals();
+            }
+            else if (isRight) {
+                if (activeSlotIndex < 2) activeSlotIndex++;
+                updateSlotVisuals();
+            }
+            else if (isEnter) {
+                if (saveCallback) saveCallback();
+            }
+            return; 
+        }
+
+        if (isGameOver || runCountdownSequence) return;
+
+        if (isLeft) { 
+            if (currentLaneIndex > 0) { currentLaneIndex--; updateCarPosition(); } 
+        }
+        else if (isRight) { 
+            if (currentLaneIndex < carLanes.length - 1) { currentLaneIndex++; updateCarPosition(); } 
+        }
+    });
+
+    loadLeaderboard();
+    updateCarPosition();
+    initMenuNavigation();
+
+    var obstaclePool = ['assets/obstacles/Tree_1.png', 'assets/obstacles/Tree_2.png', 'assets/obstacles/Tree_3.png', 'assets/obstacles/Boulder_1.png', 'assets/obstacles/Boulder_2.png', 'assets/obstacles/Boulder_3.png'];
+    var activeObstacles = [];
+    var roadTopY = 140, roadBottomY = 650;
+    var roadHeight = roadBottomY - roadTopY;
+    var perspectiveCurve = 0.9; 
+    var masterFrameCount = 0;
+    var retroStepsCount = 0;
+    var isBlinking = false;
+    var blinkTimer = 0;
+
+    function spawnObstacle() {
+        var randomAsset = obstaclePool[Math.floor(Math.random() * obstaclePool.length)];
+        var img = document.createElement('img');
+        img.src = randomAsset; img.className = 'obstacle';
+        var spawnLaneIndex = Math.floor(Math.random() * obstacleLanes.length);
+        innerScreen.appendChild(img);
+        activeObstacles.push({ element: img, step: -1, totalSteps: 12, baseWidth: 64, baseHeight: 64, laneIndex: spawnLaneIndex });
+    }
+
+    function triggerGameOver() {
+        isGameOver = true;
+        clearInterval(scoreInterval);
+        
+        musicIntro.pause();
+        musicLoop.pause();
+
+        sfxTa.play().catch(function(e) { console.log(e); });
+        tryAgainImg.style.display = 'block';
+
+        setTimeout(function() {
+            checkAndSaveScore(score, function() {
+                resetToMainMenu();
+            });
+        }, 3000); 
+    }
+
+    function updateGame() {
+        if (isGameOver || !gameStarted) return; 
+        if (runCountdownSequence) {
+            requestAnimationFrame(updateGame);
+            return;
+        }
+
+        masterFrameCount++;
+
+        var elapsed = (Date.now() - gameStartTime) / 1000;
+        var speedFactor = Math.max(3, 6 - (elapsed / 20)); 
+        var retroFrameDelay = Math.floor(speedFactor);
+        var baseSpawnFactor = Math.max(7, 12 - (elapsed / 10));
+
+        if (isBlinking) {
+            blinkTimer--;
+            car.style.visibility = (Math.floor(blinkTimer / 15) % 2 === 0) ? 'hidden' : 'visible';
+            if (blinkTimer <= 0) { isBlinking = false; car.style.visibility = 'visible'; }
+        }
+
+        if (masterFrameCount % retroFrameDelay === 0) {
+            retroStepsCount++;
+            
+            if (retroStepsCount >= nextRandomizedThreshold) { 
+                spawnObstacle(); 
+                retroStepsCount = 0; 
+                var drift = (Math.random() * 2) - 1; 
+                nextRandomizedThreshold = baseSpawnFactor + drift;
+            }
+
+            for (var i = activeObstacles.length - 1; i >= 0; i--) {
+                var obs = activeObstacles[i];
+                obs.step++; 
+                if (obs.step >= obs.totalSteps) { obs.element.remove(); activeObstacles.splice(i, 1); continue; }
+
+                obs.element.style.visibility = 'visible';
+                obs.element.style.zIndex = (obs.step > 10) ? "6" : (obs.step > 0 ? "4" : "2");
+
+                var progress = obs.step / (obs.totalSteps - 1);
+                var maxAllowedScale = 2.5; 
+                var currentScale = Math.min(0.4 + (3 - 0.4) * progress, maxAllowedScale);
+                obs.element.style.width = (obs.baseWidth * currentScale) + "px";
+                obs.element.style.height = (obs.baseHeight * currentScale) + "px";
+                obs.element.style.top = (roadTopY + (roadHeight * (progress * progress))) + "px";
+                obs.element.style.left = ((middleLaneOrigin) + (obstacleLanes[obs.laneIndex] - middleLaneOrigin) * Math.pow(progress, perspectiveCurve)) + "px";
+
+                if (obs.step === 10 && obs.laneIndex === currentLaneIndex && !isBlinking) {
+                    obs.element.remove();
+                    activeObstacles.splice(i, 1);
+                    
+                    if (playerLives > 0) { 
+                        playerLives--; 
+                        updateLivesUI(); 
+                    }
+                    
+                    if (playerLives <= 0) {
+                        triggerGameOver();
+                        return; 
+                    } else {
+                        isBlinking = true; 
+                        blinkTimer = 90;
+                    }
+                }
+            }
+        }
+        requestAnimationFrame(updateGame);
+    }
+});
