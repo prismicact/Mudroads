@@ -24,10 +24,11 @@
             background: linear-gradient(to bottom, rgb(20, 20, 20), rgb(8, 8, 8));
             opacity: 1;
             transition: opacity 0.5s ease;
+            overflow: hidden;
         }
 
         #score-display {
-            position: fixed; top: 140px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 140px; left: 50%; transform: translateX(-50%);
             color: #ffffff; font-family: 'MyPixelFont', sans-serif; font-size: 24px;
             z-index: 1000; pointer-events: none;
             display: none; 
@@ -36,6 +37,7 @@
         #outer-frame {
             width: 760px; height: 600px; border: 2px solid #ffffff;
             display: flex; justify-content: center; align-items: center; position: relative;
+            transform-origin: center center;
         }
 
         #inner-screen { width: 750px; height: 590px; background-color: #000000; position: relative; }
@@ -80,19 +82,19 @@
             letter-spacing: 2px;
         }
 
-        #start-button {
+        #start-prompt {
             font-family: 'MyPixelFont', sans-serif;
-            font-size: 20px;
-            padding: 15px 40px;
-            background-color: darkgreen;
-            color: white;
-            border: 3px solid white;
-            cursor: pointer;
-            box-shadow: 4px 4px 0px #000000;
-            transition: transform 0.1s;
+            font-size: 24px;
+            color: #FFD700;
+            text-shadow: 3px 3px #000000;
+            animation: arcadeBlink 1.2s infinite;
+            text-align: center;
         }
 
-        #start-button.tv-focused { background-color: #005f00; transform: scale(1.05); }
+        @keyframes arcadeBlink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
 
         #leaderboard-container {
             position: absolute;
@@ -137,30 +139,30 @@
 <body>
 
     <div id="game-wrapper">
-        <div id="start-menu">
-            <div id="leaderboard-container">
-                <div id="leaderboard-title">TOP 10 RECORDS</div>
-                <div id="leaderboard-entries"></div>
-            </div>
-            <div id="menu-title">MUDROADS</div>
-            <div id="start-button" class="tv-focused">START</div>
-        </div>
-
-        <div id="arcade-input-overlay">
-            <h2 id="arcade-headline">GAME ENDED!</h2>
-            <div class="initials-entry-container">
-                <div id="slot-0" class="letter-slot active-slot">A</div>
-                <div id="slot-1" class="letter-slot">A</div>
-                <div id="slot-2" class="letter-slot">A</div>
-            </div>
-            <div id="tv-instructions">
-                UP/DOWN CHANGE LETTER &nbsp;&nbsp; LEFT/RIGHT CHANGE SLOT<br>
-                PRESS [OK] TO SAVE
-            </div>
-        </div>
-
-        <div id="score-display">Score: 0</div>
         <div id="outer-frame">
+            <div id="start-menu">
+                <div id="leaderboard-container">
+                    <div id="leaderboard-title">TOP 10 RECORDS</div>
+                    <div id="leaderboard-entries"></div>
+                </div>
+                <div id="menu-title">MUDROADS</div>
+                <div id="start-prompt">PRESS [OK] TO START</div>
+            </div>
+
+            <div id="arcade-input-overlay">
+                <h2 id="arcade-headline">GAME ENDED!</h2>
+                <div class="initials-entry-container">
+                    <div id="slot-0" class="letter-slot active-slot">A</div>
+                    <div id="slot-1" class="letter-slot">A</div>
+                    <div id="slot-2" class="letter-slot">A</div>
+                </div>
+                <div id="tv-instructions">
+                    UP/DOWN CHANGE LETTER &nbsp;&nbsp; LEFT/RIGHT CHANGE SLOT<br>
+                    PRESS [OK] TO SAVE
+                </div>
+            </div>
+
+            <div id="score-display">Score: 0</div>
             <div id="inner-screen">
                 <img id="try-again-img" src="assets/misc/Try_Again.png" alt="Try Again">
                 <img id="countdown-img" src="" alt="Countdown">
@@ -180,6 +182,7 @@
     <script>
         window.addEventListener('load', () => {
             const gameWrapper = document.getElementById('game-wrapper');
+            const outerFrame = document.getElementById('outer-frame');
             const innerScreen = document.getElementById('inner-screen');
             const roadLayer = document.getElementById('road-layer');
             const car = document.getElementById('car');
@@ -188,7 +191,6 @@
             const tryAgainImg = document.getElementById('try-again-img');
             const countdownImg = document.getElementById('countdown-img');
             const startMenu = document.getElementById('start-menu');
-            const startButton = document.getElementById('start-button');
             const leaderboardEntries = document.getElementById('leaderboard-entries');
             
             const arcadeOverlay = document.getElementById('arcade-input-overlay');
@@ -228,6 +230,15 @@
                     musicLoop.play().catch(e => console.log("Loop track engaged"));
                 }
             });
+
+            function scaleGameFrame() {
+                const scaleX = window.innerWidth / 780; 
+                const scaleY = window.innerHeight / 660;
+                const finalScale = Math.min(scaleX, scaleY);
+                outerFrame.style.transform = `scale(${finalScale})`;
+            }
+            window.addEventListener('resize', scaleGameFrame);
+            scaleGameFrame();
 
             function loadLeaderboard() {
                 let data = JSON.parse(localStorage.getItem('mudroads_scores')) || [];
@@ -292,12 +303,9 @@
 
             function startGameSequence() {
                 musicMenu.pause();
-                startButton.classList.remove('tv-focused');
                 startMenu.style.display = 'none';
                 livesUI.style.display = 'flex';
-                
                 gameStarted = true;
-                
                 sfxRsg.play().catch(e => console.log("SFX Blocked"));
 
                 countdownImg.style.display = 'block';
@@ -309,7 +317,6 @@
 
                 setTimeout(() => {
                     countdownImg.src = 'assets/misc/Go.png';
-                    
                     runCountdownSequence = false;
                     scoreDisplay.style.display = 'block';
                     gameStartTime = Date.now();
@@ -418,10 +425,8 @@
             function triggerGameOver() {
                 isGameOver = true;
                 clearInterval(scoreInterval);
-                
                 musicIntro.pause();
                 musicLoop.pause();
-
                 sfxTa.play().catch(e => console.log("SFX Play Error"));
                 tryAgainImg.style.display = 'block';
 
@@ -500,7 +505,9 @@
                         }
                     }
                 }
+                
                 document.title = "Mudroads";
+                requestAnimationFrame(updateGame);
             }
         });
     </script>
