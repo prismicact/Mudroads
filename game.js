@@ -283,7 +283,7 @@ window.addEventListener('load', () => {
                 updateSlotVisuals();
             }
             else if (isDown) {
-                initialsArray[activeSlotIndex Antisec]--;
+                initialsArray[activeSlotIndex]--;
                 if (initialsArray[activeSlotIndex] < 65) initialsArray[activeSlotIndex] = 90; 
                 updateSlotVisuals();
             }
