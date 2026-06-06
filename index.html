@@ -30,7 +30,7 @@
             display: block; font-family: sans-serif;
         }
 
-        #screen-size-debug {
+        #debug-panel {
             position: fixed;
             top: 10px;
             right: 10px;
@@ -38,10 +38,11 @@
             color: #00ff00;
             font-family: monospace;
             font-size: 14px;
-            padding: 6px 12px;
+            padding: 8px 14px;
             border: 1px solid #00ff00;
             border-radius: 4px;
             z-index: 9999;
+            line-height: 1.5;
         }
 
         #leaderboard-container {
@@ -166,21 +167,19 @@
             letter-spacing: 2px;
         }
 
-        .tv-focusable {
+        #start-button {
             font-family: 'MyPixelFont', sans-serif;
             font-size: 24px;
-            color: #aaaaaa;
+            color: #ffd700;
             background: transparent;
             border: none;
             text-shadow: 3px 3px 0px #000000;
             letter-spacing: 1px;
-            padding: 10px 20px;
+            animation: retroBlink 0.8s infinite steps(2, start);
         }
 
-        .tv-focusable.focused {
-            color: #ffd700;
-            transform: scale(1.1);
-            animation: retroBlink 0.8s infinite steps(2, start);
+        #start-button.focused {
+            transform: scale(1.05);
         }
 
         @keyframes retroBlink {
@@ -190,7 +189,10 @@
 </head>
 <body>
 
-    <div id="screen-size-debug">Size: 0 x 0</div>
+    <div id="debug-panel">
+        <div id="screen-size-debug">Size: 0 x 0</div>
+        <div id="key-click-debug">Key Clicked: None</div>
+    </div>
 
     <div id="leaderboard-container">
         <div id="leaderboard-title">TOP 10 RECORDS</div>
@@ -218,7 +220,7 @@
             <div id="outer-frame">
                 <div id="start-menu">
                     <div id="menu-title">MUDROADS</div>
-                    <div id="start-button" class="tv-focusable" tabindex="0">Start Game</div>
+                    <div id="start-button" tabindex="0">Press OK to Start</div>
                 </div>
 
                 <div id="inner-screen">
