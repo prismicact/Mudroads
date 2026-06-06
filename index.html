@@ -16,7 +16,6 @@
             margin: 0; 
             padding: 0; 
             overflow: hidden; 
-            cursor: none !important; 
             user-select: none; 
             -webkit-user-select: none;
             outline: none !important;
@@ -29,15 +28,31 @@
             display: block; font-family: sans-serif;
         }
 
-        #vidaa-dpad-trap {
-            position: absolute;
-            left: -9999px;
-            top: -9999px;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-            border: none;
-            background: transparent;
+        #fullscreen-prompt {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: #000000;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'MyPixelFont', sans-serif;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        #prompt-text {
+            font-size: 20px;
+            color: #ffd700;
+            text-align: center;
+            line-height: 1.8;
+            animation: promptBlink 1s infinite steps(2, start);
+        }
+
+        @keyframes promptBlink {
+            to { visibility: hidden; }
         }
 
         #screen-size-debug {
@@ -183,7 +198,6 @@
             color: #ffd700;
             background: transparent;
             border: none;
-            cursor: none;
             text-shadow: 3px 3px 0px #000000;
             letter-spacing: 1px;
             animation: retroBlink 0.8s infinite steps(2, start);
@@ -196,7 +210,9 @@
 </head>
 <body>
 
-    <input id="vidaa-dpad-trap" type="text" readonly tabindex="0">
+    <div id="fullscreen-prompt">
+        <div id="prompt-text">CLICK HERE OR PRESS ANY KEY<br>TO ENTER FULLSCREEN & START</div>
+    </div>
 
     <div id="screen-size-debug">Size: 0 x 0</div>
 
