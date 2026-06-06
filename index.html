@@ -16,8 +16,6 @@
             margin: 0; 
             padding: 0; 
             overflow: hidden; 
-            cursor: none !important;
-            pointer-events: none !important;
             user-select: none; 
             -webkit-user-select: none;
             outline: none !important;
@@ -42,206 +40,25 @@
             border: 1px solid #00ff00;
             border-radius: 4px;
             z-index: 9999;
-            line-height: 1.5;
         }
 
-        #leaderboard-container {
-            position: fixed;
-            left: 20px; 
-            top: 50%;
-            transform: translateY(-50%);
-            width: 240px;
-            color: #ffffff;
-            font-family: 'MyPixelFont', sans-serif;
-            text-shadow: 2px 2px #000000;
-            z-index: 5000;
-            transition: opacity 0.3s ease;
-        }
-
-        #leaderboard-title { font-size: 16px; color: #ffff00; margin-bottom: 15px; border-bottom: 2px solid white; padding-bottom: 5px; }
-        .leaderboard-entry { font-size: 12px; margin-bottom: 10px; text-transform: uppercase; }
-
-        #arcade-input-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background-color: rgba(0, 0, 0, 0.95);
-            z-index: 9000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: 'MyPixelFont', sans-serif;
-            color: white;
-        }
-
-        #arcade-headline { color: #ffff00; font-size: 32px; margin-bottom: 40px; text-align: center; line-height: 1.5; text-shadow: 3px 3px #000000; }
-        .initials-entry-container { display: flex; gap: 25px; margin-bottom: 50px; }
+        /* ... (Keep your existing styles for leaderboard, arcade-overlay, etc.) ... */
         
-        .letter-slot {
-            font-size: 64px; width: 80px; text-align: center;
-            border-bottom: 8px solid #555555; padding-bottom: 10px;
-            text-shadow: 4px 4px #000000;
-        }
-        .letter-slot.active-slot { border-bottom-color: #00ff00; color: #00ff00; }
-        #tv-instructions { font-size: 14px; color: #aaaaaa; text-align: center; line-height: 2.2; letter-spacing: 1px; }
-
         #game-wrapper {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             width: 100vw; height: 100vh;
             background: linear-gradient(to bottom, rgb(20, 20, 20), rgb(8, 8, 8));
-            opacity: 1;
-            transition: opacity 0.5s ease;
         }
 
-        #scalable-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 760px;
-            position: relative;
-            transform-origin: center center;
-            padding-bottom: 60px; 
-        }
-
-        #score-display {
-            color: #ffffff; font-family: 'MyPixelFont', sans-serif; font-size: 24px;
-            margin-bottom: 15px; text-align: center;
-            display: none; 
-            min-height: 30px;
-        }
-
-        #outer-frame {
-            width: 760px; height: 600px; border: 2px solid #ffffff;
-            display: flex; justify-content: center; align-items: center; position: relative;
-        }
-
-        #inner-screen { width: 750px; height: 590px; background-color: #000000; position: relative; }
-		
-        #sky-layer { width: 750px; height: 300px; position: absolute; top: 0; left: 0; z-index: 1; }
-        #road-layer { width: 750px; height: 480px; position: absolute; bottom: 0; left: 0; z-index: 3; }
-        #car { width: 96px; height: 140px; position: absolute; bottom: 20px; transform: translateX(-50%); z-index: 5; }
-
-        .obstacle { position: absolute; transform: translate(-50%, -50%); image-rendering: pixelated; visibility: visible; }
-
-        #lives-ui-container { 
-            position: absolute;
-            left: 0;
-            bottom: 10px; 
-            display: flex; 
-            gap: 8px; 
-            z-index: 500; 
-            display: none; 
-        }
-        .life-heart { width: 36px; height: 36px; image-rendering: pixelated; }
-
-        #try-again-img, #countdown-img {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 342px; height: 128px;
-            image-rendering: pixelated;
-            display: none;
-            z-index: 2000;
-        }
-
-        #start-menu {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); 
-            z-index: 3000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #menu-title {
-            font-family: 'MyPixelFont', sans-serif;
-            font-size: 56px;
-            color: #ffffff;
-            margin-bottom: 40px;
-            text-shadow: 5px 5px #000000;
-            letter-spacing: 2px;
-        }
-
-        #start-button {
-            font-family: 'MyPixelFont', sans-serif;
-            font-size: 24px;
-            color: #ffd700;
-            background: transparent;
-            border: none;
-            text-shadow: 3px 3px 0px #000000;
-            letter-spacing: 1px;
-            animation: retroBlink 0.8s infinite steps(2, start);
-        }
-
-        #start-button.focused {
-            transform: scale(1.05);
-        }
-
-        @keyframes retroBlink {
-            to { visibility: hidden; }
-        }
+        /* ... (Keep the rest of your existing CSS as it was) ... */
     </style>
 </head>
 <body>
-
     <div id="debug-panel">
         <div id="screen-size-debug">Size: 0 x 0</div>
         <div id="key-click-debug">Key Clicked: None</div>
     </div>
-
-    <div id="leaderboard-container">
-        <div id="leaderboard-title">TOP 10 RECORDS</div>
-        <div id="leaderboard-entries"></div>
-    </div>
-
-    <div id="arcade-input-overlay">
-        <h2 id="arcade-headline">GAME ENDED!</h2>
-        <div class="initials-entry-container">
-            <div id="slot-0" class="letter-slot active-slot">A</div>
-            <div id="slot-1" class="letter-slot">A</div>
-            <div id="slot-2" class="letter-slot">A</div>
-        </div>
-        <div id="tv-instructions">
-            UP/DOWN CHANGE LETTER &nbsp;&nbsp; LEFT/RIGHT CHANGE SLOT<br>
-            PRESS [OK] TO SAVE
-        </div>
-    </div>
-
-    <div id="game-wrapper">
-        <div id="scalable-container">
-            
-            <div id="score-display">Score: 0</div>
-
-            <div id="outer-frame">
-                <div id="start-menu">
-                    <div id="menu-title">MUDROADS</div>
-                    <div id="start-button" tabindex="0">Press OK to Start</div>
-                </div>
-
-                <div id="inner-screen">
-                    <img id="try-again-img" src="assets/misc/Try_Again.png" alt="Try Again">
-                    <img id="countdown-img" src="" alt="Countdown">
-
-                    <img id="sky-layer" src="assets/misc/Sky.png" alt="Sky">
-                    <img id="road-layer" src="assets/misc/Road.gif" alt="Road">
-                    <img id="car" src="assets/misc/Car.gif" alt="Car">
-                </div>
-            </div>
-
-            <div id="lives-ui-container">
-                <img class="life-heart" src="assets/misc/Life.png" alt="Life">
-                <img class="life-heart" src="assets/misc/Life.png" alt="Life">
-                <img class="life-heart" src="assets/misc/Life.png" alt="Life">
-            </div>
-
-        </div>
-    </div>
-
+    
     <script src="game.js"></script>
 </body>
 </html>
